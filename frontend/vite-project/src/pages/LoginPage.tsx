@@ -7,20 +7,37 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
+
     try {
-      const response = await api.post('account/login/', { email, password }); // send email & password
+      // Only POST to login, no user fetch
+      const response = await api.post('account/login/', { email, password });
       console.log('Login Response:', response.data);
-      localStorage.setItem('token', response.data.access); // save JWT token
+
+      // Save JWT token in localStorage
+      localStorage.setItem('token', response.data.access);
+
+      // Navigate to home
       navigate('/home');
     } catch (err: any) {
-      console.error(err.response || err);
-      // show backend error detail if available
-      setError(err.response?.data?.detail || 'Login failed');
+      console.error('Login error:', err.response || err);
+      if (err.response) {
+        setError(
+          err.response.data.detail ||
+          JSON.stringify(err.response.data) ||
+          'Login failed'
+        );
+      } else {
+        setError('Network error or server is down');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,6 +49,7 @@ const LoginPage = () => {
       >
         <h2 className="text-2xl font-bold mb-4">Login</h2>
         {error && <p className="text-red-500 mb-2">{error}</p>}
+
         <input
           type="email"
           placeholder="Email"
@@ -50,9 +68,10 @@ const LoginPage = () => {
         />
         <button
           type="submit"
-          className="bg-green-600 text-white py-2 rounded hover:bg-green-700"
+          className="bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50"
+          disabled={loading}
         >
-          Login
+          {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
     </div>

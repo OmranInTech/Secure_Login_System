@@ -77,18 +77,16 @@ WSGI_APPLICATION = 'secure_auth.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME':'secureauth',
-         'user': 'secureauth',
-        'password': 'imrankhan123',
-        'host': 'localhost',
-        'port': '5432',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'secureauth',         # your PostgreSQL database name
+        'USER': 'secureauth',         # your PostgreSQL username
+        'PASSWORD': 'imrankhan123',   # your PostgreSQL password
+        'HOST': 'localhost',          # usually localhost
+        'PORT': '5432',               # default PostgreSQL port
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -127,9 +125,13 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
 }
 
 CORS_ALLOWED_ORIGINS = [
