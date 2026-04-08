@@ -9,15 +9,15 @@ from dotenv import load_dotenv
 # ---------- BASE DIRECTORY ----------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load .env from the project root (where manage.py lives)
+# Load .env
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # ---------- SECURITY ----------
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = [
-    'your-backend.onrender.com',  # Replace with your deployed backend URL
-]
+
+# Add your deployed backend host here
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 
 # ---------- INSTALLED APPS ----------
 INSTALLED_APPS = [
@@ -57,7 +57,7 @@ ROOT_URLCONF = 'secure_auth.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],  # add templates if needed
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -74,7 +74,7 @@ WSGI_APPLICATION = 'secure_auth.wsgi.application'
 # ---------- DATABASE ----------
 DATABASES = {
     'default': dj_database_url.parse(
-        config('DATABASE_URL')  # Use python-decouple to read .env
+        config('DATABASE_URL')
     )
 }
 
@@ -108,9 +108,7 @@ REST_FRAMEWORK = {
 }
 
 # ---------- CORS ----------
-CORS_ALLOWED_ORIGINS = [
-    "https://your-frontend.netlify.app",  # replace with your frontend URL
-]
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='').split(',')
 
 # ---------- DEFAULT AUTO FIELD ----------
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
