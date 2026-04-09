@@ -13,11 +13,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # ---------- SECURITY ----------
-SECRET_KEY = config('SECRET_KEY')
-DEBUG = config('DEBUG', default=False, cast=bool)
+SECRET_KEY = config('SECRET_KEY', default='replace-me-with-secret-key')
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-# Add your deployed backend host here
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
+# ---------- HOSTS ----------
+ALLOWED_HOSTS = [host.strip() for host in config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')]
 
 # ---------- INSTALLED APPS ----------
 INSTALLED_APPS = [
@@ -28,13 +28,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Your app
+    # Your apps
     'accounts',
 
     # Third-party
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'whitenoise.runserver_nostatic',  # Static files in production
 ]
 
 # ---------- MIDDLEWARE ----------
@@ -74,7 +75,9 @@ WSGI_APPLICATION = 'secure_auth.wsgi.application'
 # ---------- DATABASE ----------
 DATABASES = {
     'default': dj_database_url.parse(
-        config('DATABASE_URL')
+        config('DATABASE_URL', default='sqlite:///' + str(BASE_DIR / 'db.sqlite3')),
+        conn_max_age=600,
+        ssl_require=False  # False for dev; set True for hosted Postgres
     )
 }
 
@@ -108,7 +111,25 @@ REST_FRAMEWORK = {
 }
 
 # ---------- CORS ----------
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='').split(',')
+cors_origins_env = config('CORS_ALLOWED_ORIGINS', default='')
+if cors_origins_env:
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_env.split(',')]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    ]
 
-# ---------- DEFAULT AUTO FIELD ----------
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# ---------- PRODUCTION SECURITY ----------
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # CSRF_TRUSTED_ORIGINS must include scheme (http:// or https://)
+    CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS if host != '*']
+else:
+    # Dev CSRF trusted origins
+    CSRF_TRUSTED_ORIGINS = [
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+    ]
